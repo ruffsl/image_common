@@ -38,6 +38,7 @@
 #include <functional>
 
 #include <rclcpp/node.hpp>
+#include <rclcpp/subscription_options.hpp>
 
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
@@ -71,12 +72,18 @@ public:
   IMAGE_TRANSPORT_PUBLIC
   CameraSubscriber() = default;
 
+  template<
+    typename AllocatorT,
+    typename MessageMemoryStrategyT>
   IMAGE_TRANSPORT_PUBLIC
-  CameraSubscriber(rclcpp::Node * node,
-                   const std::string& base_topic,
-                   const Callback& callback,
-                   const std::string& transport,
-                   rmw_qos_profile_t = rmw_qos_profile_default);
+  CameraSubscriber(
+    rclcpp::Node* node,
+    const std::string & base_topic,
+    const std::string & transport,
+    const rclcpp::QoS & qos,
+    const Callback& callback,
+    const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
+    typename MessageMemoryStrategyT::SharedPtr msg_mem_strat);
 
   /**
    * \brief Get the base topic (on which the raw image is published).

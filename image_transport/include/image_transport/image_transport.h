@@ -64,13 +64,18 @@ Publisher create_publisher(
 /**
  * \brief Subscribe to an image topic, free function version.
  */
+  template<
+    typename AllocatorT,
+    typename MessageMemoryStrategyT>
 IMAGE_TRANSPORT_PUBLIC
 Subscriber create_subscription(
   rclcpp::Node* node,
   const std::string & base_topic,
-  const Subscriber::Callback & callback,
   const std::string & transport,
-  rmw_qos_profile_t custom_qos = rmw_qos_profile_default);
+  const rclcpp::QoS & qos,
+  const Subscriber::Callback & callback,
+  const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
+  typename MessageMemoryStrategyT::SharedPtr msg_mem_strat);
 
 /*!
  * \brief Advertise a camera, free function version.
@@ -137,52 +142,80 @@ public:
   /**
    * \brief Subscribe to an image topic, version for arbitrary std::function object.
    */
+  template<
+    typename AllocatorT,
+    typename MessageMemoryStrategyT>
   IMAGE_TRANSPORT_PUBLIC
   Subscriber subscribe(
-    const std::string & base_topic, uint32_t queue_size,
+    const std::string & base_topic,
+    const rclcpp::QoS & qos,
     const Subscriber::Callback & callback,
+    const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
+    typename MessageMemoryStrategyT::SharedPtr msg_mem_strat,
     const VoidPtr & tracked_object = VoidPtr(),
     const TransportHints * transport_hints = nullptr);
 
   /**
    * \brief Subscribe to an image topic, version for bare function.
    */
+  template<
+      typename AllocatorT,
+      typename MessageMemoryStrategyT>
   IMAGE_TRANSPORT_PUBLIC
   Subscriber subscribe(
-    const std::string & base_topic, uint32_t queue_size,
+    const std::string & base_topic,
+    const rclcpp::QoS & qos,
     void (*fp)(const ImageConstPtr &),
+    const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
+    typename MessageMemoryStrategyT::SharedPtr msg_mem_strat,
     const TransportHints * transport_hints = nullptr)
   {
-    return subscribe(base_topic, queue_size,
+    return subscribe(base_topic, qos,
              std::function<void(const ImageConstPtr &)>(fp),
+             options, msg_mem_strat,
              VoidPtr(), transport_hints);
   }
 
   /**
    * \brief Subscribe to an image topic, version for class member function with bare pointer.
    */
-  template<class T>
+  template<
+      typename AllocatorT,
+      typename MessageMemoryStrategyT,
+      class T>
   Subscriber subscribe(
-    const std::string & base_topic, uint32_t queue_size,
+    const std::string & base_topic,
+    const rclcpp::QoS & qos,
     void (T::* fp)(const ImageConstPtr &), T * obj,
+    const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
+    typename MessageMemoryStrategyT::SharedPtr msg_mem_strat,
     const TransportHints * transport_hints = nullptr)
   {
-    return subscribe(base_topic, queue_size, std::bind(fp, obj, std::placeholders::_1),
+    return subscribe(base_topic, qos, std::bind(fp, obj, std::placeholders::_1),
+             options, msg_mem_strat,
              VoidPtr(), transport_hints);
   }
 
   /**
    * \brief Subscribe to an image topic, version for class member function with shared_ptr.
    */
-  template<class T>
+  template<
+      typename AllocatorT,
+      typename MessageMemoryStrategyT,
+      class T>
   Subscriber subscribe(
-    const std::string & base_topic, uint32_t queue_size,
+    const std::string & base_topic,
+    const rclcpp::QoS & qos,
     void (T::* fp)(const ImageConstPtr &),
     const std::shared_ptr<T> & obj,
+    const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
+    typename MessageMemoryStrategyT::SharedPtr msg_mem_strat,
     const TransportHints * transport_hints = nullptr)
   {
-    return subscribe(base_topic, queue_size, std::bind(fp,
-             obj.get(), std::placeholders::_1), obj, transport_hints);
+    return subscribe(base_topic, qos, std::bind(fp,
+             obj.get(), std::placeholders::_1),
+             options, msg_mem_strat,
+             obj, transport_hints);
   }
 
   /*!

@@ -34,6 +34,7 @@
 
 #include <memory>
 
+#include <rclcpp/subscription_options.hpp>
 #include <pluginlib/class_loader.hpp>
 
 #include "image_transport/camera_common.h"
@@ -67,14 +68,19 @@ Publisher create_publisher(
   return Publisher(node, base_topic, kImpl->pub_loader_, custom_qos);
 }
 
+template<
+    typename AllocatorT,
+    typename MessageMemoryStrategyT>
 Subscriber create_subscription(
-  rclcpp::Node * node,
+  rclcpp::Node* node,
   const std::string & base_topic,
-  const Subscriber::Callback & callback,
   const std::string & transport,
-  rmw_qos_profile_t custom_qos)
+  const rclcpp::QoS & qos,
+  const Subscriber::Callback & callback,
+  const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
+  typename MessageMemoryStrategyT::SharedPtr msg_mem_strat)
 {
-  return Subscriber(node, base_topic, callback, kImpl->sub_loader_, transport, custom_qos);
+  return Subscriber(node, base_topic, transport, qos, callback, kImpl->sub_loader_, options, msg_mem_strat);
 }
 
 CameraPublisher create_camera_publisher(
@@ -85,14 +91,19 @@ CameraPublisher create_camera_publisher(
   return CameraPublisher(node, base_topic, custom_qos);
 }
 
+template<
+    typename AllocatorT,
+    typename MessageMemoryStrategyT>
 CameraSubscriber create_camera_subscription(
-  rclcpp::Node * node,
+  rclcpp::Node* node,
   const std::string & base_topic,
-  const CameraSubscriber::Callback & callback,
   const std::string & transport,
-  rmw_qos_profile_t custom_qos)
+  const rclcpp::QoS & qos,
+  const CameraSubscriber::Callback & callback,
+  const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
+  typename MessageMemoryStrategyT::SharedPtr msg_mem_strat)
 {
-  return CameraSubscriber(node, base_topic, callback, transport, custom_qos);
+  return CameraSubscriber(node, base_topic, transport, qos, callback, options, msg_mem_strat);
 }
 
 std::vector<std::string> getDeclaredTransports()
@@ -149,17 +160,24 @@ Publisher ImageTransport::advertise(const std::string & base_topic, uint32_t que
   return create_publisher(impl_->node_.get(), base_topic, custom_qos);
 }
 
+template<
+    typename AllocatorT,
+    typename MessageMemoryStrategyT,
+    class T>
 Subscriber ImageTransport::subscribe(
-  const std::string & base_topic, uint32_t queue_size,
+  const std::string & base_topic,
+  const rclcpp::QoS & qos,
   const Subscriber::Callback & callback,
   const VoidPtr & tracked_object,
-  const TransportHints * transport_hints)
+  const TransportHints * transport_hints,
+  const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
+  typename MessageMemoryStrategyT::SharedPtr msg_mem_strat)
 {
   (void) tracked_object;
   rmw_qos_profile_t custom_qos = rmw_qos_profile_default;
   custom_qos.depth = queue_size;
-  return create_subscription(impl_->node_.get(), base_topic, callback,
-           getTransportOrDefault(transport_hints), custom_qos);
+  return create_subscription(impl_->node_.get(), base_topic, qos, callback,
+           getTransportOrDefault(transport_hints), options, msg_mem_strat);
 }
 
 CameraPublisher ImageTransport::advertiseCamera(

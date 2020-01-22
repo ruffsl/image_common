@@ -37,6 +37,7 @@
 
 #include <rclcpp/macros.hpp>
 #include <rclcpp/node.hpp>
+#include <rclcpp/subscription_options.hpp>
 #include <sensor_msgs/msg/image.hpp>
 
 #include "image_transport/visibility_control.hpp"
@@ -67,52 +68,78 @@ public:
   /**
    * \brief Subscribe to an image topic, version for arbitrary std::function object.
    */
+  template<
+    typename AllocatorT,
+    typename MessageMemoryStrategyT>
   void subscribe(
-    rclcpp::Node * node, const std::string & base_topic,
+    rclcpp::Node * node,
+    const std::string & base_topic,
+    const rclcpp::QoS & qos,
     const Callback & callback,
-    rmw_qos_profile_t custom_qos = rmw_qos_profile_default)
+    const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
+    typename MessageMemoryStrategyT::SharedPtr msg_mem_strat)
   {
-    return subscribeImpl(node, base_topic, callback, custom_qos);
+    return subscribeImpl(node, base_topic, qos, callback, options, msg_mem_strat);
   }
 
   /**
    * \brief Subscribe to an image topic, version for bare function.
    */
+  template<
+    typename AllocatorT,
+    typename MessageMemoryStrategyT>
   void subscribe(
-    rclcpp::Node * node, const std::string & base_topic,
+    rclcpp::Node * node,
+    const std::string & base_topic,
+    const rclcpp::QoS & qos,
     void (*fp)(const sensor_msgs::msg::Image::ConstSharedPtr &),
-    rmw_qos_profile_t custom_qos = rmw_qos_profile_default)
+    const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
+    typename MessageMemoryStrategyT::SharedPtr msg_mem_strat)
   {
-    return subscribe(node, base_topic,
+    return subscribe(node, base_topic, qos,
              std::function<void(const sensor_msgs::msg::Image::ConstSharedPtr &)>(fp),
-             custom_qos);
+             options, msg_mem_strat);
   }
 
   /**
    * \brief Subscribe to an image topic, version for class member function with bare pointer.
    */
-  template<class T>
+  template<
+    typename AllocatorT,
+    typename MessageMemoryStrategyT,
+    class T>
   void subscribe(
-    rclcpp::Node * node, const std::string & base_topic,
+    rclcpp::Node * node,
+    const std::string & base_topic,
+    const rclcpp::QoS & qos,
     void (T::* fp)(const sensor_msgs::msg::Image::ConstSharedPtr &), T * obj,
-    rmw_qos_profile_t custom_qos = rmw_qos_profile_default)
+    const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
+    typename MessageMemoryStrategyT::SharedPtr msg_mem_strat)
   {
-    return subscribe(node, base_topic,
-             std::bind(fp, obj, std::placeholders::_1), custom_qos);
+    return subscribe(node, base_topic, qos,
+             std::bind(fp, obj, std::placeholders::_1),
+             options, msg_mem_strat);
   }
 
   /**
    * \brief Subscribe to an image topic, version for class member function with shared_ptr.
    */
-  template<class T>
+  template<
+    typename AllocatorT,
+    typename MessageMemoryStrategyT,
+    class T>
   void subscribe(
-    rclcpp::Node * node, const std::string & base_topic,
+    rclcpp::Node * node,
+    const std::string & base_topic,
+    const rclcpp::QoS & qos,
     void (T::* fp)(const sensor_msgs::msg::Image::ConstSharedPtr &),
     std::shared_ptr<T> & obj,
-    rmw_qos_profile_t custom_qos = rmw_qos_profile_default)
+    const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
+    typename MessageMemoryStrategyT::SharedPtr msg_mem_strat)
   {
-    return subscribe(node, base_topic,
-             std::bind(fp, obj, std::placeholders::_1), custom_qos);
+    return subscribe(node, base_topic, qos,
+             std::bind(fp, obj, std::placeholders::_1),
+             options, msg_mem_strat);
   }
 
   /**
@@ -143,10 +170,16 @@ protected:
   /**
    * \brief Subscribe to an image transport topic. Must be implemented by the subclass.
    */
+  template<
+    typename AllocatorT,
+    typename MessageMemoryStrategyT>
   virtual void subscribeImpl(
-    rclcpp::Node * node, const std::string & base_topic,
+    rclcpp::Node * node,
+    const std::string & base_topic,
+    const rclcpp::QoS & qos,
     const Callback & callback,
-    rmw_qos_profile_t custom_qos = rmw_qos_profile_default) = 0;
+    const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
+    typename MessageMemoryStrategyT::SharedPtr msg_mem_strat) = 0;
 };
 
 } //namespace image_transport
