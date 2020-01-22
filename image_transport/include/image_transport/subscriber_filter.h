@@ -36,6 +36,7 @@
 #define IMAGE_TRANSPORT_SUBSCRIBER_FILTER_H
 
 #include <message_filters/simple_filter.h>
+#include <rclcpp/subscription_options.hpp>
 #include "image_transport/image_transport.h"
 #include "image_transport/visibility_control.hpp"
 
@@ -76,11 +77,18 @@ public:
    * \param transport The transport hint to pass along
    */
   IMAGE_TRANSPORT_PUBLIC
+  template<
+      typename AllocatorT,
+      typename MessageMemoryStrategyT>
   SubscriberFilter(
-    rclcpp::Node * node, const std::string & base_topic,
-    const std::string & transport)
+    rclcpp::Node* node,
+    const std::string & base_topic,
+    const std::string & transport,
+    const rclcpp::QoS & qos,
+    const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
+    typename MessageMemoryStrategyT::SharedPtr msg_mem_strat)
   {
-    subscribe(node, base_topic, transport);
+    subscribe(node, base_topic, transport, qos, options, msg_mem_strat);
   }
 
   /**
@@ -105,17 +113,23 @@ public:
    * \param nh The ros::NodeHandle to use to subscribe.
    * \param base_topic The topic to subscribe to.
    */
+  template<
+    typename AllocatorT,
+    typename MessageMemoryStrategyT>
   IMAGE_TRANSPORT_PUBLIC
   void subscribe(
     rclcpp::Node * node,
     const std::string & base_topic,
     const std::string & transport,
-    rmw_qos_profile_t custom_qos = rmw_qos_profile_default)
+    const rclcpp::QoS & qos,
+    const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
+    typename MessageMemoryStrategyT::SharedPtr msg_mem_strat)
   {
     unsubscribe();
     sub_ =
-      image_transport::create_subscription(node, base_topic,
-        std::bind(&SubscriberFilter::cb, this, std::placeholders::_1), transport, custom_qos);
+      image_transport::create_subscription(node, base_topic, transport, qos,
+        std::bind(&SubscriberFilter::cb, this, std::placeholders::_1),
+        options, msg_mem_strat);
   }
 
   /**

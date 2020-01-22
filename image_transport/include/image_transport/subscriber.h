@@ -36,6 +36,7 @@
 #define IMAGE_TRANSPORT_SUBSCRIBER_H
 
 #include <rclcpp/node.hpp>
+#include <rclcpp/subscription_options.hpp>
 #include <sensor_msgs/msg/image.hpp>
 
 #include "image_transport/exception.h"
@@ -68,14 +69,19 @@ public:
   IMAGE_TRANSPORT_PUBLIC
   Subscriber() = default;
 
+  template<
+    typename AllocatorT,
+    typename MessageMemoryStrategyT>
   IMAGE_TRANSPORT_PUBLIC
   Subscriber(
-    rclcpp::Node * node,
+    rclcpp::Node* node,
     const std::string & base_topic,
-    const Callback & callback,
-    SubLoaderPtr loader,
     const std::string & transport,
-    rmw_qos_profile_t custom_qos = rmw_qos_profile_default);
+    const rclcpp::QoS & qos,
+    const Subscriber::Callback & callback,
+    SubLoaderPtr loader,
+    const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
+    typename MessageMemoryStrategyT::SharedPtr msg_mem_strat);
 
   /**
    * \brief Returns the base image topic.

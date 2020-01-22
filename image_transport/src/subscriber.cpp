@@ -82,13 +82,18 @@ struct Subscriber::Impl
   //double constructed_;
 };
 
+template<
+    typename AllocatorT,
+    typename MessageMemoryStrategyT>
 Subscriber::Subscriber(
-  rclcpp::Node * node,
+  rclcpp::Node* node,
   const std::string & base_topic,
-  const Callback & callback,
-  SubLoaderPtr loader,
   const std::string & transport,
-  rmw_qos_profile_t custom_qos)
+  const rclcpp::QoS & qos,
+  const Subscriber::Callback & callback,
+  SubLoaderPtr loader,
+  const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
+  typename MessageMemoryStrategyT::SharedPtr msg_mem_strat)
 : impl_(std::make_shared<Impl>(node, loader))
 {
   // Load the plugin for the chosen transport.
@@ -124,7 +129,7 @@ Subscriber::Subscriber(
 
   // Tell plugin to subscribe.
   RCLCPP_DEBUG(impl_->logger_, "Subscribing to: %s\n", base_topic.c_str());
-  impl_->subscriber_->subscribe(node, base_topic, callback, custom_qos);
+  impl_->subscriber_->subscribe(node, base_topic, qos, callback, options, msg_mem_strat);
 }
 
 std::string Subscriber::getTopic() const
